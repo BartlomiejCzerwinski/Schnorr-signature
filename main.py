@@ -7,17 +7,32 @@ S1 = 0
 S2 = 0
 
 def generatePQ():
+    q = get_random_prime(141)
+    p = get_p_based_on_q(q, 513)
+    p_entry.delete(0, tk.END)
+    p_entry.insert(0, p)
+    q_entry.delete(0, tk.END)
+    q_entry.insert(0, q)
+    return
+
+def get_random_prime(bit_length):
+    result = 0
     while True:
-        p = sympy.randprime(2 ** 512, 2 ** 513)
-        factors = sympy.factorint(p - 1)
-        print(sympy.isprime(p))
-        for q in factors:
-            if q > 2 ** 140:
-                p_entry.delete(0, tk.END)
-                p_entry.insert(0, p)
-                q_entry.delete(0, tk.END)
-                q_entry.insert(0, q)
-                return p, q
+        result = get_random_positive_number(bit_length)
+        if result < (2**140) or result % 2 == 0 or not sympy.isprime(result):
+            continue
+        return result
+def get_p_based_on_q(q, bits_magnitude):
+    p = 0
+    while True:
+        r = get_random_positive_number(bits_magnitude - q.bit_length())
+        p = (q * r) + 1
+        if p % 2 == 0 or not sympy.isprime(p):
+            continue
+        return p
+
+def get_random_positive_number(bits):
+    return random.randint(2**(bits), 2**(bits + 1))
 
 def modular_inverse(a, modulus):
     _, x, _ = extended_gcd(a, modulus)
@@ -105,7 +120,6 @@ def verifySignature():
     M = texty_entry.get().encode('utf-8')
     hash_object = hashlib.sha256(M + Z_bytes)
     hash_value = hash_object.digest()
-    print("przyszło: ", int.from_bytes(hash_value, byteorder='big'))
     split_string(signature_entry.get())
     if int.from_bytes(hash_value, byteorder='big') == S1:
         signature_verify_entry.delete(0, tk.END)
